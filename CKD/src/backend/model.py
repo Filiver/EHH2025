@@ -16,12 +16,13 @@ class Patient:
         try:
             self.egfr_date, self.egfr, self.egfr_unit, self.egfr_note = self.get_egfr()
         except MeasurementError as e:
-            self.egfr, self.egfr_date, self.egfr_unit, self.egfr_note = None, None, None, None
+            self.egfr_date, self.egfr, self.egfr_unit, self.egfr_note = None, None, None, None
             print(e)
         try:
-            self.uacr, self.uacr_date, self.uacr_unit, self.uacr_note = self.get_uacr()
+            self.uacr_date, self.uacr, self.uacr_unit, self.uacr_note = self.get_uacr()
+            print(self.uacr)
         except MeasurementError as e:
-            self.uacr, self.uacr_date, self.uacr_unit, self.uacr_note = None, None, None, None
+            self.uacr_date, self.uacr, self.uacr_unit, self.uacr_note = None, None, None, None
             print(e)
         self.gfr_category = self.calculate_gfr_category()
         self.uacr_category = self.calculate_albuminua_category()
@@ -74,9 +75,6 @@ class Patient:
                     return 1
                 return 2
         return None
-
-
-
 
 
     def get_uacr(self):
@@ -217,5 +215,5 @@ def calculate_egfr(patient_id):
 
 
 if __name__ == '__main__':
-    patient = Patient(9150)
+    patient = Patient(840)
     print(patient.__dict__)
