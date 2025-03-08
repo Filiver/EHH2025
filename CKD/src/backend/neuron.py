@@ -14,8 +14,7 @@ def generate(pos_num,neg_num, TRN_PORTION):
     return pos_trn_idxs, pos_tst_idxs, neg_trn_idxs, neg_tst_idxs
 
 
-<<<<<<< Updated upstream
-=======
+
 class MyLSTM(torch.Module):
     def __init__(self, input_size, hidden_size, num_layers, output_size, dropout_rate=0.5):
         super(MyLSTM, self).__init__()
@@ -61,9 +60,6 @@ class MyLSTM(torch.Module):
         out = self.sigmoid(out)
         
         return out
-
-
->>>>>>> Stashed changes
     
 
 
