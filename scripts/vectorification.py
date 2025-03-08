@@ -1,13 +1,13 @@
 from pathlib import Path
 import pandas as pd
+from typing import TypedDict
 
 
-def resave_data():
-    LABS.to_csv(DATA_DIR / 'labs.csv', index=False)
-    MEDS.to_csv(DATA_DIR / 'medications.csv', index=False)
-    REPORTS.to_csv(DATA_DIR / 'reports.csv', index=False)
-    TRANSPLATATIONS.to_csv(DATA_DIR / 'transplantations.csv', index=False)
-    PATIENTS.to_csv(DATA_DIR / 'patients.csv', index=False)
+class PatientData(TypedDict):
+    labs: pd.DataFrame
+    reports: pd.DataFrame
+    transplantations: pd.DataFrame
+    patients: pd.DataFrame
 
 
 DATA_DIR = Path("../data")
@@ -43,3 +43,29 @@ def show_all_data():
     for table_name, table in zip(TABLE_NAMES, ALL_TABLES):
         print(table_name.upper())
         display(table.head())
+
+
+def get_patient_data(patient_id):
+    p_labs = LABS[LABS['Patient'] == patient_id]
+    p_reports = REPORTS[REPORTS['Patient'] == patient_id]
+    # p_meds = MEDS[MEDS['Patient'] == patient_id]
+    p_reports = REPORTS[REPORTS['Patient'] == patient_id]
+    p_transplantations = TRANSPLATATIONS[TRANSPLATATIONS['Patient'] == patient_id]
+    p_patients = PATIENTS[PATIENTS['Patient'] == patient_id]
+    ret: PatientData = {
+        'labs': p_labs,
+        'reports': p_reports,
+        # 'meds': p_meds,
+        'transplantations': p_transplantations,
+        'patients': p_patients
+    }
+    return ret
+
+
+def create_timeline_from_patient_data(patient_data: PatientData):
+    labs = patient_data['labs'].sort_values('EntryDate')
+    reports = patient_data['reports'].sort_values('EntryDate')
+    # meds = patient_data['meds']
+    transplantations = patient_data['transplantations'].sort_values(
+        'EntryDate')
+    display(labs)
