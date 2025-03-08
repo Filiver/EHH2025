@@ -34,16 +34,12 @@ class Patient:
         self.patient_id = int(patient_id)
         self.date = date if date is not None else datetime.date.today()
         self.sex, self.dob, self.age = self.get_patient_info()
-        try:
-            self.egfr_date, self.egfr, self.egfr_unit, self.egfr_note, self.average_egfr = self.get_egfr()
-        except MeasurementError as e:
-            self.egfr_date, self.egfr, self.egfr_unit, self.egfr_note, self.average_egfr = None, None, None, None, None
+
+        self.egfr_date, self.egfr, self.egfr_unit, self.egfr_note, self.average_egfr, self.all_egfr = self.get_egfr()
             # print(e)
-        try:
-            self.uacr_date, self.uacr, self.uacr_unit, self.uacr_note = self.get_uacr()
+        self.uacr_date, self.uacr, self.uacr_unit, self.uacr_note, self.average_uacr, self.all_uacr = self.get_uacr()
             # print(self.uacr)
-        except MeasurementError as e:
-            self.uacr_date, self.uacr, self.uacr_unit, self.uacr_note = None, None, None, None
+
             # print(e)
         self.gfr_category = self.calculate_gfr_category()
         self.uacr_category = self.calculate_albuminua_category()
@@ -135,7 +131,7 @@ class Patient:
         return None
 
 
-    def get_uacr(self, date=None):
+    def get_uacr(self, date=None, period=datetime.timedelta(days=365)):
         date = date if date is not None else self.date
         conn = sqlite3.connect(DB)
         cur = conn.cursor()
@@ -146,14 +142,36 @@ class Patient:
                     WHERE Patient = ? AND analyte = 'UACR' AND EntryDate <= ?
                     ORDER BY EntryDate DESC;
                 """, (self.patient_id, date.strftime("%Y-%m-%d")))
-        row = cur.fetchone()
-        if row is None:
-            raise MeasurementError("Pacient nemá provedené žádné měření UACR")
-        if row[2] is None:
-            raise MeasurementError(f"Poslední měření UACR je neúplné {row[3]}")
-        if row[4] != 'g/mol':
-            raise MeasurementError("Jednotka UACR není g/mol")
-        return row[0], row[2], "g/mol", row[3]
+        rows = cur.fetchall()
+        values = []
+        last_measurement_date = datetime.datetime.strptime(rows[0][0], "%Y-%m-%d").date()
+        minimum_date = last_measurement_date - period
+        values_sum = 0
+        values_count = 0
+        for row in rows:
+            if datetime.datetime.strptime(row[0], "%Y-%m-%d").date() >= minimum_date:
+                break
+            if row is None or row[2] is None or row[4] != 'g/mol':
+                continue
+            values_sum += row[2]
+            values_count += 1
+            values.append(row[2])
+
+        if len(rows) != 0:
+            row = rows[0]
+            if row is None or row[2] is None or row[4] != 'g/mol':
+                value = None
+                note = None
+            else:
+                value = row[2]
+                note = row[3]
+        else:
+            value = None
+            note = None
+
+        values_average = values_sum / values_count if values_count > 0 else None
+
+        return last_measurement_date, value, "g/mol", note, values_average, values
 
     def get_patient_info(self, date=None):
         date = date if date is not None else self.date
@@ -199,13 +217,16 @@ class Patient:
             last_measurement_date = datetime.datetime.strptime(row[0], "%Y-%m-%d").date()
             minimum_date = last_measurement_date - period
 
-            if row[2] is None:
-                raise MeasurementError(f"Poslední měření eGFR je neúplné {row[3]}")
-            if row[4] != "ml/s/1,73 m2":
-                raise MeasurementError("Jednotka eGFR není ml/s/1,73 m2")
+            if row[2] is None or row[4] != "ml/s/1,73 m2":
+                value = None
+                note = None
+            else:
+                value = row[2] * 60
+                note = row[3]
             # print("CKD-EPI data")
             average_egfr = 0
             count_egfr = 0
+            all_egfr = []
             for r in rows:
                 if datetime.datetime.strptime(r[0], "%Y-%m-%d").date() < minimum_date:
                     break
@@ -213,7 +234,9 @@ class Patient:
                     continue
                 average_egfr += r[2] * 60
                 count_egfr += 1
-            return last_measurement_date, row[2] * 60, "ml/min/1,73 m2", row[3], average_egfr / count_egfr
+                all_egfr.append(r[2] * 60)
+            average_egfr = average_egfr / count_egfr if count_egfr != 0 else None
+            return last_measurement_date, value, "ml/min/1,73 m2", note, average_egfr / count_egfr, all_egfr
         else:
             return self.get_egfr_from_s_kreatinin(date, period)
 
@@ -240,8 +263,10 @@ class Patient:
         values_count = 0
 
         for row in rows:
+            if datetime.datetime.strptime(row[0], "%Y-%m-%d").date() < minimum_date:
+                break
             if self.sex is not None and self.age is not None and row[2] is not None and \
-                row[4] == 'µmol/l' and datetime.datetime.strptime(row[0], "%Y-%m-%d").date() >= minimum_date:
+                row[4] == 'µmol/l':
                 s_kreatinin = umol_l_to_mg_dl(row[2])
                 values.append(
                     round(EGFR_COEF[self.sex][0] * min(s_kreatinin / EGFR_BOUNDARY[self.sex], 1) ** EGFR_COEF[self.sex][1]
@@ -251,20 +276,17 @@ class Patient:
                 values_count += 1
 
         row = rows[0]
-        if row[2] is None:
-            raise MeasurementError(f"Poslední měření kreatininu je neúplné {row[3]}")
-        if row[4] != 'µmol/l':
-            raise MeasurementError("Jednotka kreatininu není µmol/l")
-        s_kreatinin = umol_l_to_mg_dl(row[2])
-        if self.sex is None or self.age is None:
-            raise MeasurementError("Chybí věk nebo pohlaví pro výpočet eGFR")
-
-
-        value = round(EGFR_COEF[self.sex][0] * min(s_kreatinin / EGFR_BOUNDARY[self.sex], 1) ** EGFR_COEF[self.sex][1]
-                      * max(s_kreatinin / EGFR_BOUNDARY[self.sex], 1) ** (EGFR_COEF[self.sex][2]) *
-                      (0.993 ** self.age), 1)
-
-        return last_measurement_date, value, "ml/min/1,73 m2", row[3], values_sum / values_count
+        if row[2] is None or row[4] != 'µmol/l' or self.sex is None or self.age is None:
+            value = None
+            note = None
+        else:
+            s_kreatinin = umol_l_to_mg_dl(row[2])
+            value = round(EGFR_COEF[self.sex][0] * min(s_kreatinin / EGFR_BOUNDARY[self.sex], 1) ** EGFR_COEF[self.sex][1]
+                          * max(s_kreatinin / EGFR_BOUNDARY[self.sex], 1) ** (EGFR_COEF[self.sex][2]) *
+                          (0.993 ** self.age), 1)
+            note = row[3]
+        values_average = values_sum / values_count if values_count != 0 else None
+        return last_measurement_date, value, "ml/min/1,73 m2", note, values_average, values
 
 DB = "../../data/CKD_train.db"
 
