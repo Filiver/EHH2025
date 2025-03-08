@@ -194,7 +194,7 @@ class Patient:
         """, (self.patient_id, date.strftime("%Y-%m-%d")))
         rows = cur.fetchall()
 
-        if len(rows) == 0:
+        if len(rows) != 0:
             row = rows[0]
             last_measurement_date = datetime.datetime.strptime(row[0], "%Y-%m-%d")
             minimum_date = last_measurement_date - period
@@ -264,7 +264,7 @@ class Patient:
                       * max(s_kreatinin / EGFR_BOUNDARY[self.sex], 1) ** (EGFR_COEF[self.sex][2]) *
                       (0.993 ** self.age), 1)
 
-        return row[0], value, "ml/min/1,73 m2", row[3], values_sum / values_count
+        return last_measurement_date, value, "ml/min/1,73 m2", row[3], values_sum / values_count
 
 DB = "../../data/CKD_train.db"
 
