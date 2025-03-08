@@ -82,7 +82,7 @@ class Patient:
             SELECT *
             FROM transplantations
             WHERE Patient = ? AND EntryDate <= ?
-            """, (self.patient_id, date))
+            """, (self.patient_id, date.strftime("%Y-%m-%d")))
         rows = cur.fetchall()
         transplants = np.zeros(8, dtype=int)
         for row in rows:
