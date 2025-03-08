@@ -29,7 +29,7 @@ class Alert:
 class Patient:
     def __init__(self, patient_id, date=None):
         self.patient_id = int(patient_id)
-        self.date = datetime.datetime.strptime(date, "%Y-%m-%d") if date is not None else datetime.date.today()
+        self.date = date if date is not None else datetime.date.today()
         self.sex, self.dob, self.age = self.get_patient_info()
         try:
             self.egfr_date, self.egfr, self.egfr_unit, self.egfr_note = self.get_egfr()
