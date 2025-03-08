@@ -42,6 +42,8 @@ class Patient:
         self.upcr_date, self.upcr, self.upcr_unit, self.upcr_note, self.average_upcr, self.all_upcr = self.get_lab("UPCR")
         self.s_kreatinin_date, self.s_kreatinin, self.s_kreatinin_unit, self.s_kreatinin_note, self.average_s_kreatinin, self.all_s_kreatinin = self.get_lab("s_kreatinin")
 
+        self.transplants = self.get_transplants()
+
         self.gfr_category = self.calculate_gfr_category()
         self.uacr_category = self.calculate_albuminua_category()
         self.ckd_stage = self.calculate_ckd_stage()
@@ -70,6 +72,23 @@ class Patient:
         elif self.uacr_category == 2:
             alerts.append(Alert("Střední riziko CKD - doporučení odběrů eGFR", "UACR", 3))
         return alerts
+
+    def get_transplants(self, date=None):
+        date = date if date is not None else self.date
+        conn = sqlite3.connect(DB)
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT *
+            FROM transplantations
+            WHERE Patient = ? AND EntryDate <= ?
+            """, (self.patient_id, date.strftime("%Y-%m-%d")))
+        rows = cur.fetchall()
+        transplants = np.zeros(8, dtype=int)
+        for row in rows:
+            cur_transplants = np.array(row[3:], dtype=int)
+            transplants += cur_transplants
+        return transplants
 
     def is_in_nefrology_care(self):
         conn = sqlite3.connect(DB)
@@ -304,6 +323,8 @@ def umol_l_to_mg_dl(umol_l):
 
 
 if __name__ == '__main__':
-    patient = Patient(840, datetime.date(year=2021, month=1, day=1))
+    patient = Patient(1513340, datetime.date(year=2021, month=1, day=1))
+    # patient = Patient(840, datetime.date(year=2021, month=1, day=1))
+    # patient = Patient(4030, datetime.date(year=2021, month=1, day=1))
     print(patient.__dict__)
     print(patient.alerts)
