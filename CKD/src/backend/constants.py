@@ -6,3 +6,10 @@ MALE = 0
 FEMALE = 1
 
 LAST_NEFROLOGY_VISIT_SILENCER = 180
+
+TYPICAL_UNIT = {
+    "s_kreatinin": "µmol/l",
+    'UACR': "g/mol",
+    "PU": "g/l",
+    "UPCR": "g/mol",
+}
