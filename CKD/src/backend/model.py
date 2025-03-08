@@ -10,8 +10,9 @@ class MeasurementError(ValueError):
         super().__init__(self.message)
 
 class Patient:
-    def __init__(self, patient_id):
+    def __init__(self, patient_id, date=None):
         self.patient_id = patient_id
+        self.date = date if date is not None else datetime.date.today()
         self.sex, self.dob, self.age = self.get_patient_info()
         try:
             self.egfr_date, self.egfr, self.egfr_unit, self.egfr_note = self.get_egfr()
@@ -77,16 +78,17 @@ class Patient:
         return None
 
 
-    def get_uacr(self):
+    def get_uacr(self, date=None):
+        date = date if date is not None else self.date
         conn = sqlite3.connect(DB)
         cur = conn.cursor()
         cur.execute(
             """
                     SELECT EntryDate, analyte, ValueNumber, ValueText, unit 
                     FROM labs
-                    WHERE Patient = ? AND analyte = 'UACR' 
+                    WHERE Patient = ? AND analyte = 'UACR' AND EntryDate <= ?
                     ORDER BY EntryDate DESC;
-                """, (self.patient_id,))
+                """, (self.patient_id, date.strftime("%Y-%m-%d")))
         row = cur.fetchone()
         if row is None:
             raise MeasurementError("Pacient nemá provedené žádné měření UACR")
@@ -96,7 +98,8 @@ class Patient:
             raise MeasurementError("Jednotka UACR není g/mol")
         return row[0], row[2], "g/mol", row[3]
 
-    def get_patient_info(self):
+    def get_patient_info(self, date=None):
+        date = date if date is not None else self.date
         conn = sqlite3.connect(DB)
         cur = conn.cursor()
         cur.execute(
@@ -109,19 +112,20 @@ class Patient:
         if patient_data is None:
             raise MeasurementError("Nelze spočítat bez dat o pacientovi")
         dob = datetime.datetime.strptime(patient_data[0], '%Y-%m-%d')
-        return int(patient_data[1] == "F"), dob, datetime.datetime.now().year - dob.year
+        return int(patient_data[1] == "F"), dob, date.year - dob.year
 
 
-    def get_egfr(self):
+    def get_egfr(self, date=None):
+        date = date if date is not None else self.date
         conn = sqlite3.connect(DB)
         cur = conn.cursor()
         # print(os.listdir(f"{os.curdir}/../../data/"))
         cur.execute("""
             SELECT EntryDate, analyte, ValueNumber, ValueText, unit 
             FROM labs
-            WHERE Patient = ? AND analyte = 'CKD-EPI' 
+            WHERE Patient = ? AND analyte = 'CKD-EPI' AND EntryDate <= ?
             ORDER BY EntryDate DESC;
-        """, (self.patient_id,))
+        """, (self.patient_id, date.strftime("%Y-%m-%d")))
         row = cur.fetchone()
 
         if row is not None:
@@ -129,20 +133,22 @@ class Patient:
                 raise MeasurementError(f"Poslední měření eGFR je neúplné {row[3]}")
             if row[4] != "ml/s/1,73 m2":
                 raise MeasurementError("Jednotka eGFR není ml/s/1,73 m2")
+            print("CKD-EPI data")
             return row[0], row[2] * 60, "ml/min/1,73 m2", row[3]
         else:
-            return self.get_egfr_from_s_kreatinin()
+            return self.get_egfr_from_s_kreatinin(date)
 
-    def get_egfr_from_s_kreatinin(self):
+    def get_egfr_from_s_kreatinin(self, date=None):
+        date = date if date is not None else self.date
         conn = sqlite3.connect(DB)
         cur = conn.cursor()
         cur.execute(
             """
                     SELECT EntryDate, analyte, ValueNumber, ValueText, unit 
                     FROM labs
-                    WHERE Patient = ? AND analyte = 's_kreatinin' 
+                    WHERE Patient = ? AND analyte = 's_kreatinin' AND EntryDate <= ?
                     ORDER BY EntryDate DESC;
-                """, (self.patient_id,))
+                """, (self.patient_id, date.strftime("%Y-%m-%d")))
         row = cur.fetchone()
         if row is None:
             raise MeasurementError("Žádná laboratorní data")
@@ -171,49 +177,6 @@ def umol_l_to_mg_dl(umol_l):
     return umol_l * KREATININ_MOLAR_MASS / 10000
 
 
-def calculate_egfr(patient_id):
-
-    conn = sqlite3.connect(DB)
-    cur = conn.cursor()
-    cur.execute(
-        """
-                SELECT EntryDate, analyte, ValueNumber, ValueText, unit 
-                FROM labs
-                WHERE Patient = ? AND analyte = 's_kreatinin' 
-                ORDER BY EntryDate DESC;
-            """, (patient_id,))
-    row = cur.fetchone()
-    if row is None:
-        raise MeasurementError("Žádná laboratorní data")
-
-    cur.execute(
-        """
-                SELECT DateOfBirth, Sex
-                FROM patients
-                WHERE Patient = ?
-        """, (patient_id,))
-    patient_data = cur.fetchone()
-    if patient_data is None:
-        raise MeasurementError("Nelze spočítat bez dat o pacientovi")
-    dob = datetime.datetime.strptime(patient_data[0], '%Y-%m-%d')
-    sex = patient_data[1]
-    if row[2] is None:
-        raise MeasurementError(f"Poslední měření kreatininu je neúplné {row[3]}")
-    if row[4] != 'µmol/l':
-        raise MeasurementError("Jednotka kreatininu není µmol/l")
-    s_kreatinin = umol_l_to_mg_dl(row[2])
-    if sex == 'M':
-        sex = 0
-    else:
-        sex = 1
-
-    value = round(EGFR_COEF[sex][0] * min(s_kreatinin / EGFR_BOUNDARY[sex], 1) ** EGFR_COEF[sex][1]
-             * max(s_kreatinin / EGFR_BOUNDARY[sex], 1) ** (EGFR_COEF[sex][2]) *
-             (0.993 ** (datetime.datetime.now().year - dob.year)), 1)
-
-    return row[0], value, "ml/min/1,73 m2", row[3]
-
-
 if __name__ == '__main__':
-    patient = Patient(840)
+    patient = Patient(840, datetime.date(year=2023, month=1, day=1))
     print(patient.__dict__)
