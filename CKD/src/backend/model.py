@@ -13,10 +13,90 @@ class Patient:
     def __init__(self, patient_id):
         self.patient_id = patient_id
         self.sex, self.dob, self.age = self.get_patient_info()
-        self.egfr = None
-        self.egfr_date = None
-        self.egfr_unit = None
-        self.egfr_note = None
+        try:
+            self.egfr_date, self.egfr, self.egfr_unit, self.egfr_note = self.get_egfr()
+        except MeasurementError as e:
+            self.egfr, self.egfr_date, self.egfr_unit, self.egfr_note = None, None, None, None
+            print(e)
+        try:
+            self.uacr, self.uacr_date, self.uacr_unit, self.uacr_note = self.get_uacr()
+        except MeasurementError as e:
+            self.uacr, self.uacr_date, self.uacr_unit, self.uacr_note = None, None, None, None
+            print(e)
+        self.gfr_category = self.calculate_gfr_category()
+        self.uacr_category = self.calculate_albuminua_category()
+        self.ckd_stage = self.calculate_ckd_stage()
+
+    def calculate_gfr_category(self):
+        if self.egfr is not None:
+            if self.egfr >= 90:
+                return 1
+            elif self.egfr >= 60:
+                return 2
+            elif self.egfr >= 45:
+                return 3
+            elif self.egfr >= 30:
+                return 4
+            elif self.egfr >= 15:
+                return 5
+            return 6
+        else:
+            return None
+
+    def calculate_albuminua_category(self):
+        if self.uacr is not None:
+            if self.uacr < 3:
+                return 1
+            elif self.uacr < 30:
+                return 2
+            return 3
+        else:
+            return None
+
+    def calculate_ckd_stage(self):
+        if self.uacr_category is not None and self.gfr_category is not None:
+            if self.gfr_category > 4:
+                return 3
+            elif self.gfr_category == 4:
+                if self.uacr_category == 1:
+                    return 2
+                return 3
+            elif self.gfr_category == 3:
+                if self.uacr_category == 1:
+                    return 1
+                elif self.uacr_category == 2:
+                    return 2
+                return 3
+            elif self.gfr_category < 3:
+                if self.uacr_category == 1:
+                    return 0
+                elif self.uacr_category == 2:
+                    return 1
+                return 2
+        return None
+
+
+
+
+
+    def get_uacr(self):
+        conn = sqlite3.connect(DB)
+        cur = conn.cursor()
+        cur.execute(
+            """
+                    SELECT EntryDate, analyte, ValueNumber, ValueText, unit 
+                    FROM labs
+                    WHERE Patient = ? AND analyte = 'UACR' 
+                    ORDER BY EntryDate DESC;
+                """, (self.patient_id,))
+        row = cur.fetchone()
+        if row is None:
+            raise MeasurementError("Pacient nemá provedené žádné měření UACR")
+        if row[2] is None:
+            raise MeasurementError(f"Poslední měření UACR je neúplné {row[3]}")
+        if row[4] != 'g/mol':
+            raise MeasurementError("Jednotka UACR není g/mol")
+        return row[0], row[2], "g/mol", row[3]
 
     def get_patient_info(self):
         conn = sqlite3.connect(DB)
@@ -68,7 +148,6 @@ class Patient:
         row = cur.fetchone()
         if row is None:
             raise MeasurementError("Žádná laboratorní data")
-
         if row[2] is None:
             raise MeasurementError(f"Poslední měření kreatininu je neúplné {row[3]}")
         if row[4] != 'µmol/l':
@@ -138,4 +217,5 @@ def calculate_egfr(patient_id):
 
 
 if __name__ == '__main__':
-    print(calculate_egfr(9150), get_egfr(9150))
+    patient = Patient(9150)
+    print(patient.__dict__)
