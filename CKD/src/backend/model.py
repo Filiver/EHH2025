@@ -45,25 +45,25 @@ class Patient:
         self.gfr_category = self.calculate_gfr_category()
         self.uacr_category = self.calculate_albuminua_category()
         self.ckd_stage = self.calculate_ckd_stage()
-        self.in_nefrology_care = self.is_in_nefrology_care()
+        self.last_nefrology_visit, self.in_nefrology_care = self.is_in_nefrology_care()
         self.alerts = self.generate_alerts()
 
 
     def generate_alerts(self):
         alerts = []
-        if self.ckd_stage == 3 and (self.date - self.in_nefrology_care).days >= LAST_NEFROLOGY_VISIT_SILENCER:
+        if self.ckd_stage == 3 and (self.date - self.last_nefrology_visit).days >= LAST_NEFROLOGY_VISIT_SILENCER:
            alerts.append(Alert("Velmi vysoké riziko CKD - doporučení k dalšímu vyšetření", "KDIGO", 5))
-        elif self.ckd_stage == 2 and (self.date - self.in_nefrology_care).days >= LAST_NEFROLOGY_VISIT_SILENCER:
+        elif self.ckd_stage == 2 and (self.date - self.last_nefrology_visit).days >= LAST_NEFROLOGY_VISIT_SILENCER:
             alerts.append(Alert("Vysoké riziko CKD - doporučení k dalšímu vyšetření", "KDIGO", 4))
-        elif self.ckd_stage == 1 and (self.date - self.in_nefrology_care).days >= LAST_NEFROLOGY_VISIT_SILENCER:
+        elif self.ckd_stage == 1 and (self.date - self.last_nefrology_visit).days >= LAST_NEFROLOGY_VISIT_SILENCER:
             alerts.append(Alert("Střední riziko CKD - doporučení k dalšímu vyšetření", "KDIGO", 2))
-        elif 4 > self.gfr_category > 1:
+        elif self.gfr_category is not None and 4 > self.gfr_category > 1:
             alerts.append(Alert("Riziko CKD - doporučení odběrů UACR", "eGFR", 1 if self.gfr_category == 2 else 3))
-        elif self.gfr_category > 4 and (self.date - self.in_nefrology_care).days >= LAST_NEFROLOGY_VISIT_SILENCER:
+        elif self.gfr_category is not None and self.gfr_category > 4 and (self.date - self.last_nefrology_visit).days >= LAST_NEFROLOGY_VISIT_SILENCER:
             alerts.append(Alert("Velmi vysoké riziko CKD - doporučení odběrů UACR a dalšího vyšetření", "eGFR", 5))
-        elif self.gfr_category > 4:
+        elif self.gfr_category is not None and self.gfr_category > 4:
             alerts.append(Alert("Velmi vysoké riziko CKD - doporučení odběrů UACR", "eGFR", 4))
-        elif self.uacr_category == 3 and (self.date - self.in_nefrology_care).days >= LAST_NEFROLOGY_VISIT_SILENCER:
+        elif self.uacr_category == 3 and (self.date - self.last_nefrology_visit).days >= LAST_NEFROLOGY_VISIT_SILENCER:
             alerts.append(Alert("Vysoké až velmi vysoké riziko CKD - doporučení odběrů eGFR a doporučení k dalšímu vyšetření", "UACR", 5))
         elif self.uacr_category == 3:
             alerts.append(Alert("Vysoké až velmi vysoké riziko CKD - doporučení odběrů eGFR", "UACR", 4))
@@ -81,7 +81,7 @@ class Patient:
             WHERE Patient = ? AND (reports.EntryDate <= ? AND clinic = 'KN')
             """, (self.patient_id, self.date.strftime("%Y-%m-%d")))
         row = cur.fetchone()
-        return datetime.datetime.strptime(row[0], "%Y-%m-%d").date() if row is not None else None
+        return datetime.datetime.strptime(row[0], "%Y-%m-%d").date() if row is not None else datetime.date(year=1900, month=1, day=1), row is not None
 
     def calculate_gfr_category(self):
         if self.egfr is not None:
@@ -164,9 +164,18 @@ class Patient:
             """, (self.patient_id,))
         patient_data = cur.fetchone()
         if patient_data is None:
-            raise MeasurementError("Nelze spočítat bez dat o pacientovi")
-        dob = datetime.datetime.strptime(patient_data[0], '%Y-%m-%d')
-        return int(patient_data[1] == "F"), dob, date.year - dob.year
+            raise MeasurementError("Pacient nebyl nalezen v databázi")
+        if patient_data[0] is not None:
+            dob = datetime.datetime.strptime(patient_data[0], '%Y-%m-%d')
+            age = date.year - dob.year
+        else:
+            dob = None
+            age = None
+        if patient_data[1] is not None:
+            sex = int(patient_data[1] == "F")
+        else:
+            sex = None
+        return sex, dob, age
 
 
     def get_egfr(self, date=None):
@@ -211,13 +220,11 @@ class Patient:
         if row[4] != 'µmol/l':
             raise MeasurementError("Jednotka kreatininu není µmol/l")
         s_kreatinin = umol_l_to_mg_dl(row[2])
-        if self.sex == 'M':
-            sex = 0
-        else:
-            sex = 1
+        if self.sex is None or self.age is None:
+            raise MeasurementError("Chybí věk nebo pohlaví pro výpočet eGFR")
 
-        value = round(EGFR_COEF[sex][0] * min(s_kreatinin / EGFR_BOUNDARY[sex], 1) ** EGFR_COEF[sex][1]
-                      * max(s_kreatinin / EGFR_BOUNDARY[sex], 1) ** (EGFR_COEF[sex][2]) *
+        value = round(EGFR_COEF[self.sex][0] * min(s_kreatinin / EGFR_BOUNDARY[self.sex], 1) ** EGFR_COEF[self.sex][1]
+                      * max(s_kreatinin / EGFR_BOUNDARY[self.sex], 1) ** (EGFR_COEF[self.sex][2]) *
                       (0.993 ** self.age), 1)
 
         return row[0], value, "ml/min/1,73 m2", row[3]
