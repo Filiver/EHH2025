@@ -239,7 +239,7 @@ class Patient:
                 count_egfr += 1
                 all_egfr.append(r[2] * 60)
             average_egfr = average_egfr / count_egfr if count_egfr != 0 else None
-            return last_measurement_date, value, "ml/min/1,73 m2", note, average_egfr / count_egfr, all_egfr
+            return last_measurement_date, value, "ml/min/1,73 m2", note, average_egfr, all_egfr
         else:
             return self.get_egfr_from_s_kreatinin(date, period)
 
