@@ -1,4 +1,5 @@
 import torch
+from torch import nn
 import numpy as np
 
 def generate(pos_num,neg_num, TRN_PORTION):
@@ -15,7 +16,7 @@ def generate(pos_num,neg_num, TRN_PORTION):
 
 
 
-class MyLSTM(torch.Module):
+class MyLSTM(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, output_size, dropout_rate=0.5):
         super(MyLSTM, self).__init__()
         self.hidden_size = hidden_size
