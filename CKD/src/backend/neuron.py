@@ -2,6 +2,9 @@ import torch
 from torch import nn
 import numpy as np
 
+
+
+
 def generate(pos_num,neg_num, TRN_PORTION):
     TRN_PORTION = 0.7
     pos_idxs =np.arange(pos_num)
