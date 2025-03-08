@@ -37,11 +37,11 @@ class Patient:
         self.sex, self.dob, self.age = self.get_patient_info()
 
         self.egfr_date, self.egfr, self.egfr_unit, self.egfr_note, self.average_egfr, self.all_egfr = self.get_egfr()
-            # print(e)
-        self.uacr_date, self.uacr, self.uacr_unit, self.uacr_note, self.average_uacr, self.all_uacr = self.get_uacr()
-            # print(self.uacr)
+        self.uacr_date, self.uacr, self.uacr_unit, self.uacr_note, self.average_uacr, self.all_uacr = self.get_lab("UACR")
+        self.pu_date, self.pu, self.pu_unit, self.pu_note, self.average_pu, self.all_pu = self.get_lab("PU")
+        self.upcr_date, self.upcr, self.upcr_unit, self.upcr_note, self.average_upcr, self.all_upcr = self.get_lab("UPCR")
+        self.s_kreatinin_date, self.s_kreatinin, self.s_kreatinin_unit, self.s_kreatinin_note, self.average_s_kreatinin, self.all_s_kreatinin = self.get_lab("s_kreatinin")
 
-            # print(e)
         self.gfr_category = self.calculate_gfr_category()
         self.uacr_category = self.calculate_albuminua_category()
         self.ckd_stage = self.calculate_ckd_stage()
@@ -132,7 +132,7 @@ class Patient:
         return None
 
 
-    def get_uacr(self, date=None, period=None):
+    def get_lab(self, analyte, date=None, period=None):
         date = date if date is not None else self.date
         period = period if period is not None else self.period
         conn = sqlite3.connect(DB)
@@ -141,9 +141,9 @@ class Patient:
             """
                     SELECT EntryDate, analyte, ValueNumber, ValueText, unit 
                     FROM labs
-                    WHERE Patient = ? AND analyte = 'UACR' AND EntryDate <= ?
+                    WHERE Patient = ? AND analyte = ? AND EntryDate <= ?
                     ORDER BY EntryDate DESC;
-                """, (self.patient_id, date.strftime("%Y-%m-%d")))
+                """, (self.patient_id, analyte, date.strftime("%Y-%m-%d")))
         rows = cur.fetchall()
         values = []
         if len(rows) == 0:
@@ -153,9 +153,9 @@ class Patient:
         values_sum = 0
         values_count = 0
         for row in rows:
-            if datetime.datetime.strptime(row[0], "%Y-%m-%d").date() >= minimum_date:
+            if datetime.datetime.strptime(row[0], "%Y-%m-%d").date() < minimum_date:
                 break
-            if row is None or row[2] is None or row[4] != 'g/mol':
+            if row is None or row[2] is None or row[4] != TYPICAL_UNIT[analyte]:
                 continue
             values_sum += row[2]
             values_count += 1
@@ -163,7 +163,7 @@ class Patient:
 
         if len(rows) != 0:
             row = rows[0]
-            if row is None or row[2] is None or row[4] != 'g/mol':
+            if row is None or row[2] is None or row[4] != TYPICAL_UNIT[analyte]:
                 value = None
                 note = None
             else:
@@ -175,7 +175,7 @@ class Patient:
 
         values_average = values_sum / values_count if values_count > 0 else None
 
-        return last_measurement_date, value, "g/mol", note, values_average, values
+        return last_measurement_date, value, TYPICAL_UNIT[analyte], note, values_average, values
 
     def get_patient_info(self, date=None):
         date = date if date is not None else self.date
