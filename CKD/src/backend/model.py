@@ -241,7 +241,7 @@ class Patient:
             last_measurement_date = datetime.datetime.strptime(row[0], "%Y-%m-%d").date()
             minimum_date = last_measurement_date - period
 
-            if row[2] is None or row[4] != "ml/s/1,73 m2":
+            if row[2] is None or (row[4] != "ml/s/1,73 m2" and row[4] != "ml/s/spt"):
                 value = None
                 note = None
             else:
@@ -254,7 +254,7 @@ class Patient:
             for r in rows:
                 if datetime.datetime.strptime(r[0], "%Y-%m-%d").date() < minimum_date:
                     break
-                if r[2] is None or r[4] != "ml/s/1,73 m2":
+                if r[2] is None or (row[4] != "ml/s/1,73 m2" and row[4] != "ml/s/spt"):
                     continue
                 average_egfr += r[2] * 60
                 count_egfr += 1
@@ -323,7 +323,7 @@ def umol_l_to_mg_dl(umol_l):
 
 
 if __name__ == '__main__':
-    patient = Patient(1513340, datetime.date(year=2021, month=1, day=1))
+    patient = Patient(1215860, datetime.date(year=2021, month=1, day=1), period=datetime.timedelta(days=5000))
     # patient = Patient(840, datetime.date(year=2021, month=1, day=1))
     # patient = Patient(4030, datetime.date(year=2021, month=1, day=1))
     print(patient.__dict__)
