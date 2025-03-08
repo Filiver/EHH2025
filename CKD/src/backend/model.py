@@ -196,18 +196,18 @@ class Patient:
 
         if len(rows) != 0:
             row = rows[0]
-            last_measurement_date = datetime.datetime.strptime(row[0], "%Y-%m-%d")
+            last_measurement_date = datetime.datetime.strptime(row[0], "%Y-%m-%d").date()
             minimum_date = last_measurement_date - period
 
             if row[2] is None:
                 raise MeasurementError(f"Poslední měření eGFR je neúplné {row[3]}")
             if row[4] != "ml/s/1,73 m2":
                 raise MeasurementError("Jednotka eGFR není ml/s/1,73 m2")
-            print("CKD-EPI data")
+            # print("CKD-EPI data")
             average_egfr = 0
             count_egfr = 0
             for r in rows:
-                if datetime.datetime.strptime(r[0], "%Y-%m-%d") < minimum_date:
+                if datetime.datetime.strptime(r[0], "%Y-%m-%d").date() < minimum_date:
                     break
                 if r[2] is None or r[4] != "ml/s/1,73 m2":
                     continue
@@ -233,7 +233,7 @@ class Patient:
             raise MeasurementError("Žádná laboratorní data")
 
         values = []
-        last_measurement_date = datetime.datetime.strptime(rows[0][0], "%Y-%m-%d")
+        last_measurement_date = datetime.datetime.strptime(rows[0][0], "%Y-%m-%d").date()
         minimum_date = last_measurement_date - period
 
         values_sum = 0
@@ -241,7 +241,7 @@ class Patient:
 
         for row in rows:
             if self.sex is not None and self.age is not None and row[2] is not None and \
-                row[4] == 'µmol/l' and datetime.datetime.strptime(row[0], "%Y-%m-%d") >= minimum_date:
+                row[4] == 'µmol/l' and datetime.datetime.strptime(row[0], "%Y-%m-%d").date() >= minimum_date:
                 s_kreatinin = umol_l_to_mg_dl(row[2])
                 values.append(
                     round(EGFR_COEF[self.sex][0] * min(s_kreatinin / EGFR_BOUNDARY[self.sex], 1) ** EGFR_COEF[self.sex][1]
