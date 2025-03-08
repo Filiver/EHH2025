@@ -48,6 +48,7 @@ class Patient:
         self.in_nefrology_care = self.is_in_nefrology_care()
         self.alerts = self.generate_alerts()
 
+
     def generate_alerts(self):
         alerts = []
         if self.ckd_stage == 3 and (self.date - self.in_nefrology_care).days >= LAST_NEFROLOGY_VISIT_SILENCER:
@@ -77,10 +78,10 @@ class Patient:
             """
             SELECT EntryDate
             FROM reports
-            WHERE Patient = ? AND reports.EntryDate <= ? AND clinic = 'KN'
-            """, (self.patient_id, self.date.strftime("%Y-%m-%d"), self.date.strftime("%Y-%m-%d")))
+            WHERE Patient = ? AND (reports.EntryDate <= ? AND clinic = 'KN')
+            """, (self.patient_id, self.date.strftime("%Y-%m-%d")))
         row = cur.fetchone()
-        return datetime.date.strftime(row[0], "%Y-%m-%d") if row is not None else None
+        return datetime.datetime.strptime(row[0], "%Y-%m-%d").date() if row is not None else None
 
     def calculate_gfr_category(self):
         if self.egfr is not None:
