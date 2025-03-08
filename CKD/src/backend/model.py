@@ -166,19 +166,22 @@ class Patient:
         rows = cur.fetchall()
         values = []
         if len(rows) == 0:
-            return None, None, None, None, None, []
+            return None, None, None, None, None, [], []
         last_measurement_date = datetime.datetime.strptime(rows[0][0], "%Y-%m-%d").date()
         minimum_date = last_measurement_date - period
         values_sum = 0
         values_count = 0
+        values_dates = []
         for row in rows:
-            if datetime.datetime.strptime(row[0], "%Y-%m-%d").date() < minimum_date:
+            current_date = datetime.datetime.strptime(row[0], "%Y-%m-%d").date()
+            if current_date < minimum_date:
                 break
             if row is None or row[2] is None or row[4] != TYPICAL_UNIT[analyte]:
                 continue
             values_sum += row[2]
             values_count += 1
             values.append(row[2])
+            values_dates.append(current_date)
 
         if len(rows) != 0:
             row = rows[0]
@@ -194,7 +197,7 @@ class Patient:
 
         values_average = values_sum / values_count if values_count > 0 else None
 
-        return last_measurement_date, value, TYPICAL_UNIT[analyte], note, values_average, values
+        return last_measurement_date, value, TYPICAL_UNIT[analyte], note, values_average, values, values_dates
 
     def get_patient_info(self, date=None):
         date = date if date is not None else self.date
@@ -251,16 +254,19 @@ class Patient:
             average_egfr = 0
             count_egfr = 0
             all_egfr = []
+            values_dates = []
             for r in rows:
-                if datetime.datetime.strptime(r[0], "%Y-%m-%d").date() < minimum_date:
+                current_date = datetime.datetime.strptime(r[0], "%Y-%m-%d").date()
+                if current_date < minimum_date:
                     break
                 if r[2] is None or (row[4] != "ml/s/1,73 m2" and row[4] != "ml/s/spt"):
                     continue
                 average_egfr += r[2] * 60
                 count_egfr += 1
                 all_egfr.append(r[2] * 60)
+                values_dates.append(current_date)
             average_egfr = average_egfr / count_egfr if count_egfr != 0 else None
-            return last_measurement_date, value, "ml/min/1,73 m2", note, average_egfr, all_egfr
+            return last_measurement_date, value, "ml/min/1,73 m2", note, average_egfr, all_egfr, values_dates
         else:
             return self.get_egfr_from_s_kreatinin(date, period)
 
@@ -278,7 +284,7 @@ class Patient:
                 """, (self.patient_id, date.strftime("%Y-%m-%d")))
         rows = cur.fetchall()
         if len(rows) == 0:
-            return None, None, None, None, None, []
+            return None, None, None, None, None, [], []
 
         values = []
         last_measurement_date = datetime.datetime.strptime(rows[0][0], "%Y-%m-%d").date()
@@ -286,9 +292,11 @@ class Patient:
 
         values_sum = 0
         values_count = 0
+        values_dates = []
 
         for row in rows:
-            if datetime.datetime.strptime(row[0], "%Y-%m-%d").date() < minimum_date:
+            current_date = datetime.datetime.strptime(row[0], "%Y-%m-%d").date()
+            if current_date < minimum_date:
                 break
             if self.sex is not None and self.age is not None and row[2] is not None and \
                 row[4] == 'µmol/l':
@@ -299,6 +307,7 @@ class Patient:
                       (0.993 ** self.age), 1))
                 values_sum += values[-1]
                 values_count += 1
+                values_dates.append(current_date)
 
         row = rows[0]
         if row[2] is None or row[4] != 'µmol/l' or self.sex is None or self.age is None:
@@ -311,7 +320,7 @@ class Patient:
                           (0.993 ** self.age), 1)
             note = row[3]
         values_average = values_sum / values_count if values_count != 0 else None
-        return last_measurement_date, value, "ml/min/1,73 m2", note, values_average, values
+        return last_measurement_date, value, "ml/min/1,73 m2", note, values_average, values, values_dates
 
 DB = "../../data/CKD_train.db"
 
