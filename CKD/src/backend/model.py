@@ -36,11 +36,11 @@ class Patient:
         self.period = period
         self.sex, self.dob, self.age = self.get_patient_info()
 
-        self.egfr_date, self.egfr, self.egfr_unit, self.egfr_note, self.average_egfr, self.all_egfr = self.get_egfr()
-        self.uacr_date, self.uacr, self.uacr_unit, self.uacr_note, self.average_uacr, self.all_uacr = self.get_lab("UACR")
-        self.pu_date, self.pu, self.pu_unit, self.pu_note, self.average_pu, self.all_pu = self.get_lab("PU")
-        self.upcr_date, self.upcr, self.upcr_unit, self.upcr_note, self.average_upcr, self.all_upcr = self.get_lab("UPCR")
-        self.s_kreatinin_date, self.s_kreatinin, self.s_kreatinin_unit, self.s_kreatinin_note, self.average_s_kreatinin, self.all_s_kreatinin = self.get_lab("s_kreatinin")
+        self.egfr_date, self.egfr, self.egfr_unit, self.egfr_note, self.average_egfr, self.all_egfr, self.dates_egfr = self.get_egfr()
+        self.uacr_date, self.uacr, self.uacr_unit, self.uacr_note, self.average_uacr, self.all_uacr, self.dates_uacr = self.get_lab("UACR")
+        self.pu_date, self.pu, self.pu_unit, self.pu_note, self.average_pu, self.all_pu, self.dates_pu = self.get_lab("PU")
+        self.upcr_date, self.upcr, self.upcr_unit, self.upcr_note, self.average_upcr, self.all_upcr, self.dates_upcr = self.get_lab("UPCR")
+        self.s_kreatinin_date, self.s_kreatinin, self.s_kreatinin_unit, self.s_kreatinin_note, self.average_s_kreatinin, self.all_s_kreatinin, self.dates_s_kreatinin = self.get_lab("s_kreatinin")
 
         self.transplants = self.get_transplants()
 
