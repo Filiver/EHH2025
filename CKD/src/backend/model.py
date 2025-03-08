@@ -30,9 +30,10 @@ class Alert:
 
 
 class Patient:
-    def __init__(self, patient_id, date=None):
+    def __init__(self, patient_id, date=None, period=datetime.timedelta(days=365)):
         self.patient_id = int(patient_id)
         self.date = date if date is not None else datetime.date.today()
+        self.period = period
         self.sex, self.dob, self.age = self.get_patient_info()
 
         self.egfr_date, self.egfr, self.egfr_unit, self.egfr_note, self.average_egfr, self.all_egfr = self.get_egfr()
@@ -131,8 +132,9 @@ class Patient:
         return None
 
 
-    def get_uacr(self, date=None, period=datetime.timedelta(days=365)):
+    def get_uacr(self, date=None, period=None):
         date = date if date is not None else self.date
+        period = period if period is not None else self.period
         conn = sqlite3.connect(DB)
         cur = conn.cursor()
         cur.execute(
@@ -199,8 +201,9 @@ class Patient:
         return sex, dob, age
 
 
-    def get_egfr(self, date=None, period=datetime.timedelta(days=365)):
+    def get_egfr(self, date=None, period=None):
         date = date if date is not None else self.date
+        period = period if period is not None else self.period
         conn = sqlite3.connect(DB)
         cur = conn.cursor()
         # print(os.listdir(f"{os.curdir}/../../data/"))
@@ -240,8 +243,9 @@ class Patient:
         else:
             return self.get_egfr_from_s_kreatinin(date, period)
 
-    def get_egfr_from_s_kreatinin(self, date=None, period=datetime.timedelta(days=365)):
+    def get_egfr_from_s_kreatinin(self, date=None, period=None):
         date = date if date is not None else self.date
+        period = period if period is not None else self.period
         conn = sqlite3.connect(DB)
         cur = conn.cursor()
         cur.execute(
