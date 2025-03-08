@@ -146,6 +146,8 @@ class Patient:
                 """, (self.patient_id, date.strftime("%Y-%m-%d")))
         rows = cur.fetchall()
         values = []
+        if len(rows) == 0:
+            return None, None, None, None, None, []
         last_measurement_date = datetime.datetime.strptime(rows[0][0], "%Y-%m-%d").date()
         minimum_date = last_measurement_date - period
         values_sum = 0
@@ -257,7 +259,7 @@ class Patient:
                 """, (self.patient_id, date.strftime("%Y-%m-%d")))
         rows = cur.fetchall()
         if len(rows) == 0:
-            raise MeasurementError("Žádná laboratorní data")
+            return None, None, None, None, None, []
 
         values = []
         last_measurement_date = datetime.datetime.strptime(rows[0][0], "%Y-%m-%d").date()
