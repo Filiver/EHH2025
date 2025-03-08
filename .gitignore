@@ -58,6 +58,8 @@ cover/
 # Translations
 *.mo
 *.pot
+pyproject.toml
+uv.lock
 
 # Django stuff:
 *.log
