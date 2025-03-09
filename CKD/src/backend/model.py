@@ -2,6 +2,7 @@ import sqlite3
 import numpy as np
 import os
 import datetime
+import pickle
 
 from numpy.ma.extras import average
 
@@ -57,8 +58,26 @@ class Patient:
 
         self.alerts = self.generate_alerts()
 
+    def to_row(self):
+        cols = [self.ckd_stage, self.sex, self.age, self.egfr,
+                self.average_egfr,
+                self.uacr, self.average_uacr, self.pu, self.average_pu, self.upcr, self.average_upcr]
+        diag = patient.diagnoses[0:8]
+        transplants = patient.transplants
+        cols = np.concatenate([cols, diag, transplants])
+        return cols
+
     def asses_risk(self):
-        pass
+        def load_model(model_name):
+            with open(f'../ML_models/"{model_name}', "rb") as model_file:
+                loaded_model = pickle.load(model_file)
+            print("Model loaded successfully.")
+            return loaded_model
+
+        # Example usage in an application
+        clf = load_model("RF_labs_diagnoses_optimised.pkl")
+        pred = clf.predict([self.to_row()])
+
 
     def generate_alerts(self):
         # alerts = []
