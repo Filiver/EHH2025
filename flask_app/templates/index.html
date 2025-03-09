@@ -20,12 +20,6 @@
       integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
       crossorigin="anonymous"
     ></script>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.js"
-      integrity="sha512-L0Shl7nXXzIlBSUUPpxrokqq4ojqgZFQczTYlGjzONGTDAcLremjwaWv5A+EDLnxhQzY5xUZPWLOLqYRkY0Cbw=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    ></script>
 
     <link
       rel="stylesheet"
@@ -33,9 +27,169 @@
     />
   </head>
   <body>
-    <h1>Welcome to Flask with HTML, CSS, and JS</h1>
-    <button onclick="showMessage()">Click Me</button>
-    <p id="message"></p>
+    <header class="bg-light">
+      <nav class="navbar navbar-expand-lg navbar-light container">
+        <div class="d-flex align-items-center">
+          <a class="navbar-brand" href="#" style="padding-left: 20%">CKD App</a>
+
+          <form class="row align-items-center">
+            <div class="col-auto"></div>
+            <select class="form-select" id="patient-select" name="patient">
+              <option selected>Select a patient</option>
+              <option value="1">Patient 1</option>
+            </select>
+            <div class="col-auto"></div>
+          </form>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container py-5">
+      <h1 id="Patient-num" style="text-align: left">Patient: 15205165</h1>
+      <section class="row mb-5" style="padding: 5%">
+        <div
+          class="col-md-6 align-items-center overflow-auto"
+          id="kv-container"
+        >
+          <ul class="list-group list-group-horizontal">
+            <li class="list-group-item flex-fill text-center w-50">Value1</li>
+            <li class="list-group-item flex-fill text-center w-50">Key1</li>
+          </ul>
+          <ul class="list-group list-group-horizontal">
+            <li class="list-group-item flex-fill text-center w-50">Value1</li>
+            <li class="list-group-item flex-fill text-center w-50">Key1</li>
+          </ul>
+          <ul class="list-group list-group-horizontal">
+            <li class="list-group-item flex-fill">Value1</li>
+            <li class="list-group-item flex-fill">Key1</li>
+          </ul>
+          <ul class="list-group list-group-horizontal">
+            <li class="list-group-item flex-fill">Value1</li>
+            <li class="list-group-item flex-fill">Key1</li>
+          </ul>
+          <ul class="list-group list-group-horizontal">
+            <li class="list-group-item flex-fill">Value1</li>
+            <li class="list-group-item flex-fill">Key1</li>
+          </ul>
+          <ul class="list-group list-group-horizontal">
+            <li class="list-group-item flex-fill">Value1</li>
+            <li class="list-group-item flex-fill">Key1</li>
+          </ul>
+          <ul class="list-group list-group-horizontal">
+            <li class="list-group-item flex-fill">Value1</li>
+            <li class="list-group-item flex-fill">Key1</li>
+          </ul>
+          <ul class="list-group list-group-horizontal">
+            <li class="list-group-item flex-fill">Value1</li>
+            <li class="list-group-item flex-fill">Key1</li>
+          </ul>
+          <ul class="list-group list-group-horizontal">
+            <li class="list-group-item flex-fill">Value1</li>
+            <li class="list-group-item flex-fill">Key1</li>
+          </ul>
+        </div>
+        <div class="col-md-6">
+          <table id="GFR-table" class="table table-bordered table-compact">
+            <thead>
+              <tr>
+                <th rowspan="2">
+                  GFR categories (ml/min/1.73 m<sup>2</sup>)<br />Description
+                  and range
+                </th>
+                <th colspan="3">
+                  Persistent albuminuria categories<br />Description and range
+                </th>
+              </tr>
+              <tr>
+                <th>
+                  A1<br />Normal to mildly increased<br />&lt;30 mg/g<br />&lt;3
+                  mg/mmol
+                </th>
+                <th>
+                  A2<br />Moderately increased<br />30–300 mg/g<br />3–30
+                  mg/mmol
+                </th>
+                <th>
+                  A3<br />Severely increased<br />&gt;300 mg/g<br />&gt;30
+                  mg/mmol
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr id="gfr1">
+                <td>G1<br />Normal or high<br />&ge;90</td>
+                <td
+                  id="A1"
+                  class="active-cell"
+                  style="background-color: #50c878"
+                ></td>
+                <td id="B1" style="background-color: #ffff00"></td>
+                <td id="C1" style="background-color: #ffac1c"></td>
+              </tr>
+              <tr id="gfr2">
+                <td>G2<br />Mildly decreased<br />60–89</td>
+                <td id="A2" style="background-color: #50c878"></td>
+                <td id="B2" style="background-color: #ffff00"></td>
+                <td id="C2" style="background-color: #ffac1c"></td>
+              </tr>
+              <tr id="gfr3">
+                <td>G3a<br />Mildly to moderately decreased<br />45–59</td>
+                <td id="A3" style="background-color: #ffff00"></td>
+                <td id="B3" style="background-color: #ffac1c"></td>
+                <td id="C3" style="background-color: #ff0000"></td>
+              </tr>
+              <tr id="gfr4">
+                <td>G3b<br />Moderately to severely decreased<br />30–44</td>
+                <td id="A4" style="background-color: #ffac1c"></td>
+                <td id="B4" style="background-color: #ff0000"></td>
+                <td id="C4" style="background-color: #ff0000"></td>
+              </tr>
+              <tr id="gfr5">
+                <td>G4<br />Severely decreased<br />15–29</td>
+                <td id="A5" style="background-color: #ff0000"></td>
+                <td id="B5" style="background-color: #ff0000"></td>
+                <td id="C5" style="background-color: #ff0000"></td>
+              </tr>
+              <tr id="gfr6">
+                <td>G5<br />Kidney failure<br />&lt;15</td>
+                <td id="A6" style="background-color: #ff0000"></td>
+                <td id="B6" style="background-color: #ff0000"></td>
+                <td id="C6" style="background-color: #ff0000"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="text-start row my-5">
+        <h2 class="mb-4 text-center">Alert source</h2>
+        <div id="alert-container">
+          <div class="alert alert-primary" role="alert">
+            A simple primary alert—check it out!
+          </div>
+          <div class="alert alert-primary" role="alert">
+            A simple primary alert—check it out!
+          </div>
+          <div class="alert alert-primary" role="alert">
+            A simple primary alert—check it out!
+          </div>
+          <div class="alert alert-primary" role="alert">
+            A simple primary alert—check it out!
+          </div>
+        </div>
+        <div class="col-md-8 mx-auto"></div>
+      </section>
+    </main>
+
+    <footer class="bg-dark text-light py-4">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-6">
+            <p>&copy; 2025 Health Hackathon. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+    </footer>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
   </body>
