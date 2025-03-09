@@ -12,8 +12,9 @@ SRC_DIR = CKD_DIR / 'src' / 'backend'
 DB = CKD_DIR / "data" / "CKD_train.db"
 print(SRC_DIR)
 sys.path.append(str(SRC_DIR))
-from model import Patient, change_db, Alert
+from model import Patient, change_db, Alert, change_ml_models
 change_db(str(DB))
+change_ml_models(SRC_DIR.parent / 'ML_models')
 
 
 app = Flask(__name__)
@@ -38,8 +39,9 @@ def start():
 @app.route('/api/data/<int:patient_id>', methods=['GET'])
 def get_data(patient_id):
     # try:
-    patient = Patient(patient_id)
+    patient = Patient(patient_id, risk_assesment=True)
     data = patient.toJSON()
+    print(data)
     # print(jsonify(patient))
     return json.dumps(data)
     # except Exception as e:

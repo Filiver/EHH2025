@@ -33,10 +33,14 @@ const GFRTable = document.querySelector("#GFR-table");
 const alertContainer = document.querySelector("#alert-container");
 const patientNum = document.querySelector("#Patient-num");
 const patientSelect = document.querySelector("#patient-select");
-const kvHTML = (k, v) => `
-<ul class="list-group list-group-horizontal">
-            <li class="list-group-item flex-fil text-center w-50">${k}</li>
-            <li class="list-group-item flex-fill text-center w-50">${v}</li>
+const kvHTML = (k, v, active = false) => `
+<ul class="list-group list-group-horizontal ${active ? "mydanger" : ""}">
+            <li class="list-group-item flex-fil text-center w-50 ${
+              active ? "mydanger" : ""
+            }">${k}</li>
+            <li class="list-group-item flex-fill text-center w-50 ${
+              active ? "mydanger" : ""
+            }">${v}</li>
           </ul>
 `;
 
@@ -140,6 +144,21 @@ async function loadPatient(patient_id) {
     return;
   }
   markGFR(data["uacr_category"], data["gfr_category"]);
+
+  if (data["risk_assesment"] != null) {
+    const val = data["risk_assesment"];
+    if (val === "Positive") {
+      KVContainer.insertAdjacentHTML(
+        "beforeend",
+        kvHTML("Risk Assesment", val, true)
+      );
+    } else {
+      KVContainer.insertAdjacentHTML(
+        "beforeend",
+        kvHTML("Risk Assesment", val)
+      );
+    }
+  }
 
   if (data["in_nefrology_care"]) {
     KVContainer.insertAdjacentHTML(

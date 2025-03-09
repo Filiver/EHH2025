@@ -3,6 +3,7 @@ import numpy as np
 import os
 import datetime
 import pickle
+from pathlib import Path
 
 from numpy.ma.extras import average
 
@@ -71,21 +72,22 @@ class Patient:
         cols = [self.ckd_stage, self.sex, self.age, self.egfr,
                 self.average_egfr,
                 self.uacr, self.average_uacr, self.pu, self.average_pu, self.upcr, self.average_upcr]
-        diag = patient.diagnoses[0:8]
-        transplants = patient.transplants
-        cols = np.concatenate([cols, diag, transplants])
+        diag = self.diagnoses[0:-2]
+        transplants = self.transplants
+        cols = np.concatenate([cols, diag])
         return cols
 
     def asses_risk(self):
         def load_model(model_name):
-            with open(f'../ML_models/{model_name}', "rb") as model_file:
+            with open(ML_MODELS / f'{model_name}', "rb") as model_file:
                 loaded_model = pickle.load(model_file)
             print("Model loaded successfully.")
             return loaded_model
 
         # Example usage in an application
-        clf = load_model("RF_labs_diagnoses_optimised.pkl")
+        clf = load_model("RF_labs_diagnoses_unoptimised_2.pkl")
         pred = clf.predict([self.to_row()])
+        return "Positive" if pred[0] else "Negative"
 
     def generate_alerts(self):
         # alerts = []
@@ -477,15 +479,23 @@ class Patient:
                 "ckd_stage": self.ckd_stage,
                 "last_nefrology_visit": self.last_nefrology_visit.strftime('%Y-%m-%d') if self.last_nefrology_visit is not None else None,
                 "in_nefrology_care": self.in_nefrology_care,
-                "alerts": [alert.toJSON() for alert in self.alerts]}
+                "alerts": [alert.toJSON() for alert in self.alerts],
+                "risk_assesment": self.risk_assesment
+                }
 
 
-DB = "../../data/CKD_train.db"
+DB = Path("../../data/CKD_train.db")
+ML_MODELS = Path("../ML_models/")
 
 
 def change_db(new_db):
     global DB
     DB = new_db
+
+
+def change_ml_models(new_ml_models):
+    global ML_MODELS
+    ML_MODELS = new_ml_models
 
 
 def mg_dl_to_umol_l(mg_dl):
