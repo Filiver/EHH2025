@@ -119,7 +119,6 @@ class Patient:
                         odber.append("UACR")
         
         sub_diagnoses = self.diagnoses[:-2].astype(int)
-        print(sub_diagnoses)
         if sub_diagnoses.sum() != 0:
             score += 10 * sub_diagnoses.sum()
             sources.append("DIAGNOSES")
@@ -128,7 +127,7 @@ class Patient:
             messages.append(f"Doporučeno vyšetření {', '.join(odber)}")
         
         severity = min(score, 100) // 25 + 1
-        messages.insert(0, f"{SEVERITIES[severity]} riziko")
+        messages.insert(0, f"{SEVERITIES[severity - 1]} riziko")
         if severity >= 3 and nefrology_silencer:
             messages.insert(1, f"Doporučeno vyšetření nefrologem")
         message = "\n".join(messages)
