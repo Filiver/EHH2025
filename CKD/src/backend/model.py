@@ -80,12 +80,12 @@ class Patient:
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT reports.EntryDate, E10_Diabetes_I, E11_Diabetes_II, E_Diabetes_other, Obesity, Hypertension, Aldosteronism, Hyperuricemia, CKD_mild, CKD, kidney_failure_not_CKD, kidney_transplant, dialysis
+            SELECT reports.EntryDate, Obesity, Hypertension, Aldosteronism, Hyperuricemia, CKD_mild, CKD, kidney_failure_not_CKD, kidney_transplant, dialysis, cardiovascular, diabetes
             FROM diagnoses JOIN reports ON diagnoses.ReportID = reports.ReportId
             WHERE diagnoses.Patient = ? AND EntryDate <= ?
             """, (self.patient_id, date.strftime("%Y-%m-%d")))
         rows = cur.fetchall()
-        diagnoses = np.zeros(12, dtype=int)
+        diagnoses = np.zeros(11, dtype=int)
         for row in rows:
             current_diagnoses = np.array(row[1:], dtype=int)
             diagnoses += current_diagnoses
