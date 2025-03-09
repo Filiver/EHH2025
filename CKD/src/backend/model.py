@@ -97,7 +97,7 @@ class Patient:
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT *
+            SELECT Patient, EntryDate, Organs, kidney, heart, liver, pancreas, islets, veins, uterus, small_intestine
             FROM transplantations
             WHERE Patient = ? AND EntryDate <= ?
             """, (self.patient_id, date.strftime("%Y-%m-%d")))
