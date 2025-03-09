@@ -100,10 +100,10 @@ class Patient:
                     sources.append("eGFR")
                 odber.append("UACR")
                 if self.gfr_category > 3:
-                    if (self.date - self.dates_egfr).days >= 90:
+                    if (self.date - self.egfr_date).days >= 90:
                         odber.append("eGFR")
                 else:
-                    if (self.date - self.dates_egfr).days >= 360:
+                    if (self.date - self.egfr_date).days >= 360:
                         odber.append("eGFR")
         elif self.uacr_category is not None:
             if self.uacr_category != 1:
@@ -112,10 +112,10 @@ class Patient:
                     sources.append("UACR")
                 odber.append("eGFR")
                 if self.uacr_category > 2:
-                    if (self.date - self.dates_egfr).days >= 90:
+                    if (self.date - self.uacr_date).days >= 90:
                         odber.append("UACR")
                 else:
-                    if (self.date - self.dates_egfr).days >= 360:
+                    if (self.date - self.uacr_date).days >= 360:
                         odber.append("UACR")
         
         sub_diagnoses = self.diagnoses[:-2].astype(int)
