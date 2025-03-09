@@ -31,6 +31,9 @@ class Alert:
     def __repr__(self):
         return f"{self.severity}-{self.source}: {self.message}"
 
+    def toJSON(self):
+        return str(self)
+
 
 class Patient:
     def __init__(self, patient_id, date=None, period=datetime.timedelta(days=365), risk_assesment=False):

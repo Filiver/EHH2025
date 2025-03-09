@@ -4,7 +4,7 @@ const ANALYTES = ["egfr", "pu", "upcr", "uacr", "s_kreatinin"];
 const SHOWN_KEYS = ["dob", "age"];
 
 // For presentation only
-const IDS = [840, 148090];
+const IDS = [840, 148090, 587590, 174540, 6680, 12330];
 
 /*
 dob
@@ -21,6 +21,32 @@ s_kreatinin
 
 last_nefrology_visit / not in_neforlogy_care
 */
+
+const NUM2ALPH = {
+  1: "A",
+  2: "B",
+  3: "C",
+};
+
+const KVContainer = document.querySelector("#kv-container");
+const GFRTable = document.querySelector("#GFR-table");
+const alertContainer = document.querySelector("#alert-container");
+const patientNum = document.querySelector("#Patient-num");
+const patientSelect = document.querySelector("#patient-select");
+const kvHTML = (k, v) => `
+<ul class="list-group list-group-horizontal">
+            <li class="list-group-item flex-fil text-center w-50">${k}</li>
+            <li class="list-group-item flex-fill text-center w-50">${v}</li>
+          </ul>
+`;
+
+const alertHTML = (msg) => `
+<div class="alert alert-danger" role="alert">
+          ${msg}
+        </div>`;
+
+const patientSelectHTML = (patientID) => `
+<option value="${patientID}">Patient ${patientID}</option>`;
 
 function handleNull(value) {
   let new_val = value === null || value === undefined ? "N/A" : value;
@@ -41,11 +67,24 @@ function extractAnalyte(data, analyte) {
   };
 }
 
-const NUM2ALPH = {
-  1: "A",
-  2: "B",
-  3: "C",
-};
+// const fetchedData = showMessage();
+document.addEventListener("DOMContentLoaded", () => {
+  patientSelect.innerHTML = "";
+
+  patientSelect.addEventListener("change", (e) => {
+    loadPatient(e.target.value);
+  });
+
+  IDS.forEach((id) => {
+    patientSelect.insertAdjacentHTML("beforeend", patientSelectHTML(id));
+    console.log(id);
+  });
+  // patientSelect.addEventListener("change", (e) => {
+  //   loadPatient(e.target.value);
+  // });
+
+  loadPatient(IDS[0]);
+});
 
 function markColumn(table, columnAlphabet) {
   for (let i = 1; i < 7; i++) {
@@ -90,11 +129,16 @@ function markGFR(uacr_cat, gfr_cat) {
   }
 }
 
-// const fetchedData = showMessage();
-document.addEventListener("DOMContentLoaded", async () => {
+async function loadPatient(patient_id) {
   clear();
   // markColumn(GFRTable, "C");
-  const data = await getData();
+  const data = await getData(patient_id);
+  console.log(data);
+
+  if (data["error"]) {
+    alert("Error fetching data");
+    return;
+  }
   markGFR(data["uacr_category"], data["gfr_category"]);
 
   if (data["in_nefrology_care"]) {
@@ -127,24 +171,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   data["alerts"].forEach((alert) => {
     alertContainer.insertAdjacentHTML("beforeend", alertHTML(alert));
   });
-});
-
-const KVContainer = document.querySelector("#kv-container");
-const GFRTable = document.querySelector("#GFR-table");
-const alertContainer = document.querySelector("#alert-container");
-const patientNum = document.querySelector("#Patient-num");
-const patientSelect = document.querySelector("#patient-select");
-const kvHTML = (k, v) => `
-<ul class="list-group list-group-horizontal">
-            <li class="list-group-item flex-fil text-center w-50">${k}</li>
-            <li class="list-group-item flex-fill text-center w-50">${v}</li>
-          </ul>
-`;
-
-const alertHTML = (msg) => `
-<div class="alert alert-danger" role="alert">
-          ${msg}
-        </div>`;
+}
 
 function clear() {
   KVContainer.innerHTML = "";
@@ -157,15 +184,8 @@ function clear() {
   patientNum.innerHTML = "Patient: ";
 }
 
-const patientSelectHTML = (patientID) => `
-<option value="${patientID}">Patient ${patientID}</option>`;
-
-patientSelect.addEventListener("change", (e) => {
-  console.log(e.target.value);
-});
-
-async function getData() {
-  const data = await fetch("/api/data");
+async function getData(patient_id) {
+  const data = await fetch(`/api/data/${patient_id}`);
   const jsonData = await data.json();
   return jsonData;
 }
