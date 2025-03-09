@@ -13,3 +13,6 @@ TYPICAL_UNIT = {
     "PU": "g/l",
     "UPCR": "g/mol",
 }
+
+DIAGNOSES = ["Obesity", "Hypertension", "Aldosteronism", "Hyperuricemia", "kidney_failure_not_CKD", "kidney_transplant", "dialysis", "cardiovascular", "diabetes", "CKD_mild", "CKD"]
+SEVERITIES = ["Malé", "Střední", "Vysoké", "Velmi vysoké", "Velmi vysoké"] 

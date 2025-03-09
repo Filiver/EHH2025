@@ -30,7 +30,7 @@ class Alert:
 
 
 class Patient:
-    def __init__(self, patient_id, date=None, period=datetime.timedelta(days=365)):
+    def __init__(self, patient_id, date=None, period=datetime.timedelta(days=365), risk_assesment=False):
         self.patient_id = int(patient_id)
         self.date = date if date is not None else datetime.date.today()
         self.period = period
@@ -49,30 +49,92 @@ class Patient:
         self.uacr_category = self.calculate_albuminua_category()
         self.ckd_stage = self.calculate_ckd_stage()
         self.last_nefrology_visit, self.in_nefrology_care = self.is_in_nefrology_care()
+
+        if risk_assesment:
+            self.risk_assesment = self.asses_risk()
+        else:
+            self.risk_assesment = None
+
         self.alerts = self.generate_alerts()
 
+    def asses_risk(self):
+        pass
 
     def generate_alerts(self):
-        alerts = []
-        if self.ckd_stage == 3 and (self.date - self.last_nefrology_visit).days >= LAST_NEFROLOGY_VISIT_SILENCER:
-           alerts.append(Alert("Velmi vysoké riziko CKD - doporučení k dalšímu vyšetření", "KDIGO", 5))
-        elif self.ckd_stage == 2 and (self.date - self.last_nefrology_visit).days >= LAST_NEFROLOGY_VISIT_SILENCER:
-            alerts.append(Alert("Vysoké riziko CKD - doporučení k dalšímu vyšetření", "KDIGO", 4))
-        elif self.ckd_stage == 1 and (self.date - self.last_nefrology_visit).days >= LAST_NEFROLOGY_VISIT_SILENCER:
-            alerts.append(Alert("Střední riziko CKD - doporučení k dalšímu vyšetření", "KDIGO", 2))
-        elif self.gfr_category is not None and 4 > self.gfr_category > 1:
-            alerts.append(Alert("Riziko CKD - doporučení odběrů UACR", "eGFR", 1 if self.gfr_category == 2 else 3))
-        elif self.gfr_category is not None and self.gfr_category > 4 and (self.date - self.last_nefrology_visit).days >= LAST_NEFROLOGY_VISIT_SILENCER:
-            alerts.append(Alert("Velmi vysoké riziko CKD - doporučení odběrů UACR a dalšího vyšetření", "eGFR", 5))
-        elif self.gfr_category is not None and self.gfr_category > 4:
-            alerts.append(Alert("Velmi vysoké riziko CKD - doporučení odběrů UACR", "eGFR", 4))
-        elif self.uacr_category == 3 and (self.date - self.last_nefrology_visit).days >= LAST_NEFROLOGY_VISIT_SILENCER:
-            alerts.append(Alert("Vysoké až velmi vysoké riziko CKD - doporučení odběrů eGFR a doporučení k dalšímu vyšetření", "UACR", 5))
-        elif self.uacr_category == 3:
-            alerts.append(Alert("Vysoké až velmi vysoké riziko CKD - doporučení odběrů eGFR", "UACR", 4))
-        elif self.uacr_category == 2:
-            alerts.append(Alert("Střední riziko CKD - doporučení odběrů eGFR", "UACR", 3))
-        return alerts
+        # alerts = []
+        # if self.ckd_stage == 3 and (self.date - self.last_nefrology_visit).days >= LAST_NEFROLOGY_VISIT_SILENCER:
+        #     alerts.append(Alert("Velmi vysoké riziko CKD - doporučení k dalšímu vyšetření", "KDIGO", 5))
+        # elif self.ckd_stage == 2 and (self.date - self.last_nefrology_visit).days >= LAST_NEFROLOGY_VISIT_SILENCER:
+        #     alerts.append(Alert("Vysoké riziko CKD - doporučení k dalšímu vyšetření", "KDIGO", 4))
+        # elif self.ckd_stage == 1 and (self.date - self.last_nefrology_visit).days >= LAST_NEFROLOGY_VISIT_SILENCER:
+        #     alerts.append(Alert("Střední riziko CKD - doporučení k dalšímu vyšetření", "KDIGO", 2))
+        # elif self.gfr_category is not None and 4 > self.gfr_category > 1:
+        #     alerts.append(Alert("Riziko CKD - doporučení odběrů UACR", "eGFR", 1 if self.gfr_category == 2 else 3))
+        # elif self.gfr_category is not None and self.gfr_category > 4 and (self.date - self.last_nefrology_visit).days >= LAST_NEFROLOGY_VISIT_SILENCER:
+        #     alerts.append(Alert("Velmi vysoké riziko CKD - doporučení odběrů UACR a dalšího vyšetření", "eGFR", 5))
+        # elif self.gfr_category is not None and self.gfr_category > 4:
+        #     alerts.append(Alert("Velmi vysoké riziko CKD - doporučení odběrů UACR", "eGFR", 4))
+        # elif self.uacr_category == 3 and (self.date - self.last_nefrology_visit).days >= LAST_NEFROLOGY_VISIT_SILENCER:
+        #     alerts.append(Alert("Vysoké až velmi vysoké riziko CKD - doporučení odběrů eGFR a doporučení k dalšímu vyšetření", "UACR", 5))
+        # elif self.uacr_category == 3:
+        #     alerts.append(Alert("Vysoké až velmi vysoké riziko CKD - doporučení odběrů eGFR", "UACR", 4))
+        # elif self.uacr_category == 2:
+        #     alerts.append(Alert("Střední riziko CKD - doporučení odběrů eGFR", "UACR", 3))
+        # return alerts
+        score = 0
+        sources = []
+        odber = []
+        messages = []
+
+        nefrology_silencer = (self.date - self.last_nefrology_visit).days >= LAST_NEFROLOGY_VISIT_SILENCER
+        
+        if self.ckd_stage is not None:
+            if self.ckd_stage != 0:
+                if nefrology_silencer:
+                    score += self.ckd_stage * 30
+                    sources.append("KDIGO")
+        elif self.gfr_category is not None:
+            if self.gfr_category != 1:
+                if nefrology_silencer:
+                    score += (self.gfr_category - 1) * 15
+                    sources.append("eGFR")
+                odber.append("UACR")
+                if self.gfr_category > 3:
+                    if (self.date - self.dates_egfr).days >= 90:
+                        odber.append("eGFR")
+                else:
+                    if (self.date - self.dates_egfr).days >= 360:
+                        odber.append("eGFR")
+        elif self.uacr_category is not None:
+            if self.uacr_category != 1:
+                if nefrology_silencer:
+                    score += self.uacr_category * 25
+                    sources.append("UACR")
+                odber.append("eGFR")
+                if self.uacr_category > 2:
+                    if (self.date - self.dates_egfr).days >= 90:
+                        odber.append("UACR")
+                else:
+                    if (self.date - self.dates_egfr).days >= 360:
+                        odber.append("UACR")
+        
+        sub_diagnoses = self.diagnoses[:-2].astype(int)
+        print(sub_diagnoses)
+        if sub_diagnoses.sum() != 0:
+            score += 10 * sub_diagnoses.sum()
+            sources.append("DIAGNOSES")
+            messages.append(f"Rizikové faktory: {', '.join([DIAGNOSES[diag] for diag in np.nonzero(sub_diagnoses)[0]])}")
+        if len(odber) > 0:
+            messages.append(f"Doporučeno vyšetření {', '.join(odber)}")
+        
+        severity = min(score, 100) // 25 + 1
+        messages.insert(0, f"{SEVERITIES[severity]} riziko")
+        if severity >= 3 and nefrology_silencer:
+            messages.insert(1, f"Doporučeno vyšetření nefrologem")
+        message = "\n".join(messages)
+        source = f"({', '.join(sources)})"
+
+        return [Alert(message, source, severity)]
 
     def get_diagnoses(self, date=None):
         date = date if date is not None else self.date
@@ -80,7 +142,7 @@ class Patient:
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT reports.EntryDate, Obesity, Hypertension, Aldosteronism, Hyperuricemia, CKD_mild, CKD, kidney_failure_not_CKD, kidney_transplant, dialysis, cardiovascular, diabetes
+            SELECT reports.EntryDate, Obesity, Hypertension, Aldosteronism, Hyperuricemia, kidney_failure_not_CKD, kidney_transplant, dialysis, cardiovascular, diabetes, CKD_mild, CKD
             FROM diagnoses JOIN reports ON diagnoses.ReportID = reports.ReportId
             WHERE diagnoses.Patient = ? AND EntryDate <= ?
             """, (self.patient_id, date.strftime("%Y-%m-%d")))
@@ -350,8 +412,8 @@ def umol_l_to_mg_dl(umol_l):
 
 
 if __name__ == '__main__':
-    patient = Patient(1215860, datetime.date(year=2025, month=1, day=1), period=datetime.timedelta(days=5000))
-    # patient = Patient(840, datetime.date(year=2021, month=1, day=1))
+    # patient = Patient(1215860, datetime.date(year=2025, month=1, day=1), period=datetime.timedelta(days=5000))
+    patient = Patient(840, datetime.date(year=2021, month=1, day=1))
     # patient = Patient(4030, datetime.date(year=2021, month=1, day=1))
     print(patient.__dict__)
     print(patient.alerts)
