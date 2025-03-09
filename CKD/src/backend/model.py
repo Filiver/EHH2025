@@ -161,7 +161,7 @@ class Patient:
         messages.insert(0, f"{SEVERITIES[severity - 1]} riziko")
         if severity >= 3 and nefrology_silencer:
             messages.insert(1, f"Doporučeno vyšetření nefrologem")
-        message = "\n".join(messages)
+        message = " - ".join(messages)
         source = f"({', '.join(sources)})"
 
         return [Alert(message, source, severity)]
