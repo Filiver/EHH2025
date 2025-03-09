@@ -31,17 +31,7 @@
       <nav class="navbar navbar-expand-lg navbar-light container">
         <div class="d-flex align-items-center">
           <a class="navbar-brand" href="#" style="padding-left: 20%">CKD App</a>
-          <button
-            class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarNav"
-            aria-controls="navbarNav"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span class="navbar-toggler-icon"></span>
-          </button>
+
           <form class="row align-items-center">
             <div class="col-auto"></div>
             <select class="form-select" id="patient-select" name="patient">
@@ -55,16 +45,19 @@
     </header>
 
     <main class="container py-5">
-      <h1 style="text-align: left">Patient: 15205165</h1>
+      <h1 id="Patient-num" style="text-align: left">Patient: 15205165</h1>
       <section class="row mb-5" style="padding: 5%">
-        <div class="col-md-6 align-items-center overflow-auto">
+        <div
+          class="col-md-6 align-items-center overflow-auto"
+          id="kv-container"
+        >
           <ul class="list-group list-group-horizontal">
-            <li class="list-group-item flex-fill">Value1</li>
-            <li class="list-group-item flex-fill">Key1</li>
+            <li class="list-group-item flex-fill text-center w-50">Value1</li>
+            <li class="list-group-item flex-fill text-center w-50">Key1</li>
           </ul>
           <ul class="list-group list-group-horizontal">
-            <li class="list-group-item flex-fill">Value1</li>
-            <li class="list-group-item flex-fill">Key1</li>
+            <li class="list-group-item flex-fill text-center w-50">Value1</li>
+            <li class="list-group-item flex-fill text-center w-50">Key1</li>
           </ul>
           <ul class="list-group list-group-horizontal">
             <li class="list-group-item flex-fill">Value1</li>
@@ -96,7 +89,7 @@
           </ul>
         </div>
         <div class="col-md-6">
-          <table class="table table-bordered table-compact">
+          <table id="GFR-table" class="table table-bordered table-compact">
             <thead>
               <tr>
                 <th rowspan="2">
@@ -123,41 +116,45 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
+              <tr id="gfr1">
                 <td>G1<br />Normal or high<br />&ge;90</td>
-                <td class="active-cell" style="background-color: #50c878"></td>
-                <td style="background-color: #ffff00"></td>
-                <td style="background-color: #ffac1c"></td>
+                <td
+                  id="A1"
+                  class="active-cell"
+                  style="background-color: #50c878"
+                ></td>
+                <td id="B1" style="background-color: #ffff00"></td>
+                <td id="C1" style="background-color: #ffac1c"></td>
               </tr>
-              <tr>
+              <tr id="gfr2">
                 <td>G2<br />Mildly decreased<br />60–89</td>
-                <td style="background-color: #50c878"></td>
-                <td style="background-color: #ffff00"></td>
-                <td style="background-color: #ffac1c"></td>
+                <td id="A2" style="background-color: #50c878"></td>
+                <td id="B2" style="background-color: #ffff00"></td>
+                <td id="C2" style="background-color: #ffac1c"></td>
               </tr>
-              <tr>
+              <tr id="gfr3">
                 <td>G3a<br />Mildly to moderately decreased<br />45–59</td>
-                <td style="background-color: #ffff00"></td>
-                <td style="background-color: #ffac1c"></td>
-                <td style="background-color: #ff0000"></td>
+                <td id="A3" style="background-color: #ffff00"></td>
+                <td id="B3" style="background-color: #ffac1c"></td>
+                <td id="C3" style="background-color: #ff0000"></td>
               </tr>
-              <tr>
+              <tr id="gfr4">
                 <td>G3b<br />Moderately to severely decreased<br />30–44</td>
-                <td style="background-color: #ffac1c"></td>
-                <td style="background-color: #ff0000"></td>
-                <td style="background-color: #ff0000"></td>
+                <td id="A4" style="background-color: #ffac1c"></td>
+                <td id="B4" style="background-color: #ff0000"></td>
+                <td id="C4" style="background-color: #ff0000"></td>
               </tr>
-              <tr>
+              <tr id="gfr5">
                 <td>G4<br />Severely decreased<br />15–29</td>
-                <td style="background-color: #ff0000"></td>
-                <td style="background-color: #ff0000"></td>
-                <td style="background-color: #ff0000"></td>
+                <td id="A5" style="background-color: #ff0000"></td>
+                <td id="B5" style="background-color: #ff0000"></td>
+                <td id="C5" style="background-color: #ff0000"></td>
               </tr>
-              <tr>
+              <tr id="gfr6">
                 <td>G5<br />Kidney failure<br />&lt;15</td>
-                <td style="background-color: #ff0000"></td>
-                <td style="background-color: #ff0000"></td>
-                <td style="background-color: #ff0000"></td>
+                <td id="A6" style="background-color: #ff0000"></td>
+                <td id="B6" style="background-color: #ff0000"></td>
+                <td id="C6" style="background-color: #ff0000"></td>
               </tr>
             </tbody>
           </table>
@@ -166,17 +163,19 @@
 
       <section class="text-start row my-5">
         <h2 class="mb-4 text-center">Alert source</h2>
-        <div class="alert alert-primary" role="alert">
-          A simple primary alert—check it out!
-        </div>
-        <div class="alert alert-primary" role="alert">
-          A simple primary alert—check it out!
-        </div>
-        <div class="alert alert-primary" role="alert">
-          A simple primary alert—check it out!
-        </div>
-        <div class="alert alert-primary" role="alert">
-          A simple primary alert—check it out!
+        <div id="alert-container">
+          <div class="alert alert-primary" role="alert">
+            A simple primary alert—check it out!
+          </div>
+          <div class="alert alert-primary" role="alert">
+            A simple primary alert—check it out!
+          </div>
+          <div class="alert alert-primary" role="alert">
+            A simple primary alert—check it out!
+          </div>
+          <div class="alert alert-primary" role="alert">
+            A simple primary alert—check it out!
+          </div>
         </div>
         <div class="col-md-8 mx-auto"></div>
       </section>
