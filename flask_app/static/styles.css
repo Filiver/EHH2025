@@ -10,3 +10,30 @@ button {
   font-size: 16px;
   cursor: pointer;
 }
+
+.table-compact {
+  font-size: 0.75rem; /* Make font even smaller */
+}
+
+.table-compact td,
+.table-compact th {
+  padding: 0.25rem !important; /* Reduce padding further */
+  height: 35px !important; /* Make rows shorter */
+}
+
+.table-compact td:not(:first-child) {
+  width: 70px !important; /* Make data cells narrower */
+}
+
+
+
+.table-compact td .table-compact th {
+  width: 70px !important; /* Make first column narrower */
+}
+
+.active-cell {
+  border: 8px solid black !important; /* Using !important to override Bootstrap's default styling */
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
