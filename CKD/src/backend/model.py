@@ -43,6 +43,7 @@ class Patient:
         self.s_kreatinin_date, self.s_kreatinin, self.s_kreatinin_unit, self.s_kreatinin_note, self.average_s_kreatinin, self.all_s_kreatinin, self.dates_s_kreatinin = self.get_lab("s_kreatinin")
 
         self.transplants = self.get_transplants()
+        self.diagnoses = self.get_diagnoses()
 
         self.gfr_category = self.calculate_gfr_category()
         self.uacr_category = self.calculate_albuminua_category()
@@ -72,6 +73,23 @@ class Patient:
         elif self.uacr_category == 2:
             alerts.append(Alert("Střední riziko CKD - doporučení odběrů eGFR", "UACR", 3))
         return alerts
+
+    def get_diagnoses(self, date=None):
+        date = date if date is not None else self.date
+        conn = sqlite3.connect(DB)
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT reports.EntryDate, E10_Diabetes_I, E11_Diabetes_II, E_Diabetes_other, Obesity, Hypertension, Aldosteronism, Hyperuricemia, CKD_mild, CKD, kidney_failure_not_CKD, kidney_transplant, dialysis
+            FROM diagnoses JOIN reports ON diagnoses.ReportID = reports.ReportId
+            WHERE diagnoses.Patient = ? AND EntryDate <= ?
+            """, (self.patient_id, date.strftime("%Y-%m-%d")))
+        rows = cur.fetchall()
+        diagnoses = np.zeros(12, dtype=int)
+        for row in rows:
+            current_diagnoses = np.array(row[1:], dtype=int)
+            diagnoses += current_diagnoses
+        return np.where(diagnoses > 0, 1, 0)
 
     def get_transplants(self, date=None):
         date = date if date is not None else self.date
@@ -332,7 +350,7 @@ def umol_l_to_mg_dl(umol_l):
 
 
 if __name__ == '__main__':
-    patient = Patient(1215860, datetime.date(year=2021, month=1, day=1), period=datetime.timedelta(days=5000))
+    patient = Patient(1215860, datetime.date(year=2025, month=1, day=1), period=datetime.timedelta(days=5000))
     # patient = Patient(840, datetime.date(year=2021, month=1, day=1))
     # patient = Patient(4030, datetime.date(year=2021, month=1, day=1))
     print(patient.__dict__)
