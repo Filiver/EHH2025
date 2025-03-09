@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 app = Flask(__name__)
+app.config["DEBUG"] = True  # Enable Debug Mode
 
 ROOT_DIR = Path(__file__).resolve().parent
 
