@@ -69,7 +69,7 @@ class Patient:
 
     def asses_risk(self):
         def load_model(model_name):
-            with open(f'../ML_models/"{model_name}', "rb") as model_file:
+            with open(f'../ML_models/{model_name}', "rb") as model_file:
                 loaded_model = pickle.load(model_file)
             print("Model loaded successfully.")
             return loaded_model
@@ -431,7 +431,7 @@ def umol_l_to_mg_dl(umol_l):
 
 if __name__ == '__main__':
     # patient = Patient(1215860, datetime.date(year=2025, month=1, day=1), period=datetime.timedelta(days=5000))
-    patient = Patient(840, datetime.date(year=2021, month=1, day=1))
+    patient = Patient(840, datetime.date(year=2021, month=1, day=1), risk_assesment=True)
     # patient = Patient(4030, datetime.date(year=2021, month=1, day=1))
     print(patient.__dict__)
     print(patient.alerts)
